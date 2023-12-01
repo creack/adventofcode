@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -28,77 +27,59 @@ func parse(fileName string) (*Data, error) {
 	return d, nil
 }
 
-func runPart1(_ context.Context) error {
+func run(_ context.Context) error {
 	d, err := parse("input")
 	if err != nil {
 		return fmt.Errorf("parse: %w", err)
 	}
 
-	total := 0
-	for _, line := range d.Lines {
-		var left, right byte
-	subloop:
-		for _, elem := range line {
-			if elem >= '0' && elem <= '9' {
-				left = byte(elem)
-				break subloop
-			}
-		}
-
-	subloop2:
-		for i := len(line) - 1; i >= 0; i-- {
-			elem := line[i]
-			if elem >= '0' && elem <= '9' {
-				right = elem
-				break subloop2
-			}
-		}
-		n, err := strconv.Atoi(string([]byte{left, right}))
-		if err != nil {
-			return fmt.Errorf("atoi %q: %w", line, err)
-		}
-		total += n
+	part1Tokens := map[string]int{
+		"1": 1,
+		"2": 2,
+		"3": 3,
+		"4": 4,
+		"5": 5,
+		"6": 6,
+		"7": 7,
+		"8": 8,
+		"9": 9,
 	}
-	fmt.Printf("%d\n", total)
-	return nil
-}
-
-func runPart2(_ context.Context) error {
-	d, err := parse("input")
-	if err != nil {
-		return fmt.Errorf("parse: %w", err)
+	_ = part1Tokens
+	part2Tokens := map[string]int{
+		"one":   1,
+		"two":   2,
+		"three": 3,
+		"four":  4,
+		"five":  5,
+		"six":   6,
+		"seven": 7,
+		"eight": 8,
+		"nine":  9,
+		"1":     1,
+		"2":     2,
+		"3":     3,
+		"4":     4,
+		"5":     5,
+		"6":     6,
+		"7":     7,
+		"8":     8,
+		"9":     9,
 	}
+	_ = part2Tokens
 
-	tokens := []string{
-		"one",
-		"two",
-		"three",
-		"four",
-		"five",
-		"six",
-		"seven",
-		"eight",
-		"nine",
-	}
+	tokens := part2Tokens
 
 	total := 0
 	for _, line := range d.Lines {
-		var left, right byte
+		var left, right int
 	subloop:
 		for i := 0; i < len(line); i++ {
-			elem := line[i]
-
-			if elem >= '0' && elem <= '9' {
-				left = byte(elem)
-				break subloop
-			}
-
-			for n, tok := range tokens {
-				if i+len(tok) >= len(line) {
+			for tok, n := range tokens {
+				if i+len(tok) > len(line) {
 					continue
 				}
 				if line[i:i+len(tok)] == tok {
-					left = byte(n+1) + '0'
+					left = n
 					break subloop
 				}
 			}
@@ -106,34 +87,24 @@ func runPart2(_ context.Context) error {
 
 	subloop2:
 		for i := len(line) - 1; i >= 0; i-- {
-			elem := line[i]
-			if elem >= '0' && elem <= '9' {
-				right = elem
-				break subloop2
-			}
-
-			for n, tok := range tokens {
-				if i-len(tok) < 0 {
+			for tok, n := range tokens {
+				if i-len(tok)+1 < 0 {
 					continue
 				}
 				if line[i-len(tok)+1:i+1] == tok {
-					right = byte(n+1) + '0'
+					right = n
 					break subloop2
 				}
 			}
 		}
-		n, err := strconv.Atoi(string([]byte{left, right}))
-		if err != nil {
-			return fmt.Errorf("atoi %q: %w", line, err)
-		}
-		total += n
+		total += left*10 + right
 	}
 	fmt.Printf("%d\n", total)
 	return nil
 }
 
 func main() {
-	if err := runPart2(context.Background()); err != nil {
+	if err := run(context.Background()); err != nil {
 		println("Fail:", err.Error())
 		return
 	}
