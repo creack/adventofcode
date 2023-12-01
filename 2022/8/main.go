@@ -31,9 +31,9 @@ func parse(fileName string) (*Data, error) {
 	return d, nil
 }
 
-func get(tab [][]int, x, y int) int {
-	for i := 0; i < len(tab); i++ {
-		line := tab[i]
+func (d *Data) get(x, y int) int {
+	for i := 0; i < len(d.Lines); i++ {
+		line := d.Lines[i]
 		for j := 0; j < len(line); j++ {
 			elem := line[j]
 			if i == x && j == y {
@@ -50,85 +50,54 @@ func runPart1(_ context.Context) error {
 		return fmt.Errorf("parse: %w", err)
 	}
 
-	cases := map[string]int{}
-
 	width := len(d.Lines[0])
 	height := len(d.Lines)
-	_, _ = width, height
 
-	// Looking from the top.
-	for i := 0; i < width; i++ {
-	out:
-		for j := 0; j < height; j++ {
-			if i == 0 || j == 0 || i == width-1 || j == height-1 {
-				continue
+	top := func(cur, i, j int) int {
+		for k := j - 1; k >= 0; k-- {
+			if d.get(i, k) >= cur {
+				return -1
 			}
-
-			cur := get(d.Lines, j, i)
-			for k := j - 1; k >= 0; k-- {
-				if get(d.Lines, k, i) >= cur {
-					continue out
-				}
-			}
-
-			cases[fmt.Sprintf("%d/%d", i, j)] = get(d.Lines, i, j)
 		}
+		return cur
+	}
+	bottom := func(cur, i, j int) int {
+		for k := j + 1; k < height; k++ {
+			if d.get(i, k) >= cur {
+				return -1
+			}
+		}
+		return cur
+	}
+	right := func(cur, i, j int) int {
+		for k := i + 1; k < width; k++ {
+			if d.get(k, j) >= cur {
+				return -1
+			}
+		}
+		return cur
+	}
+	left := func(cur, i, j int) int {
+		for k := i - 1; k >= 0; k-- {
+			if d.get(k, j) >= cur {
+				return -1
+			}
+		}
+		return cur
 	}
 
-	// Looking from the right.
+	cases := map[string]int{}
 	for i := 0; i < width; i++ {
-	out2:
 		for j := 0; j < height; j++ {
 			if i == 0 || j == 0 || i == width-1 || j == height-1 {
 				continue
 			}
 
-			cur := get(d.Lines, j, i)
-			for k := i + 1; k < width; k++ {
-				if get(d.Lines, j, k) >= cur {
-					continue out2
+			for _, elem := range []func(cur, i, j int) int{top, bottom, right, left} {
+				if v := elem(d.get(i, j), i, j); v != -1 {
+					cases[fmt.Sprintf("%d/%d", i, j)] = v
 				}
 			}
-
-			cases[fmt.Sprintf("%d/%d", i, j)] = get(d.Lines, i, j)
-		}
-	}
-
-	// Looking from the bottom.
-	for i := 0; i < width; i++ {
-	out3:
-		for j := 0; j < height; j++ {
-			if i == 0 || j == 0 || i == width-1 || j == height-1 {
-				continue
-			}
-
-			cur := get(d.Lines, j, i)
-			for k := j + 1; k < height; k++ {
-				if get(d.Lines, k, i) >= cur {
-					continue out3
-				}
-			}
-
-			cases[fmt.Sprintf("%d/%d", i, j)] = get(d.Lines, i, j)
-		}
-	}
-
-	// Looking from the left.
-	for i := 0; i < width; i++ {
-	out4:
-		for j := 0; j < height; j++ {
-			if i == 0 || j == 0 || i == width-1 || j == height-1 {
-				continue
-			}
-
-			cur := get(d.Lines, j, i)
-			for k := i - 1; k >= 0; k-- {
-				if get(d.Lines, j, k) >= cur {
-					continue out4
-				}
-			}
-
-			cases[fmt.Sprintf("%d/%d", i, j)] = get(d.Lines, i, j)
 		}
 	}
 
@@ -146,11 +115,11 @@ func runPart2(_ context.Context) error {
 	height := len(d.Lines)
 
 	getCount := func(x, y int) int {
-		base := get(d.Lines, x, y)
+		base := d.get(x, y)
 		// Looking up.
 		up := 0
 		for j := y - 1; j >= 0; j-- {
-			cur := get(d.Lines, x, j)
+			cur := d.get(x, j)
 			up++
 			if cur >= base {
 				break
@@ -159,7 +128,7 @@ func runPart2(_ context.Context) error {
 		// Looking down.
 		down := 0
 		for j := y + 1; j < height; j++ {
-			cur := get(d.Lines, x, j)
+			cur := d.get(x, j)
 			down++
 			if cur >= base {
 				break
@@ -168,7 +137,7 @@ func runPart2(_ context.Context) error {
 		// Looking left.
 		left := 0
 		for j := x - 1; j >= 0; j-- {
-			cur := get(d.Lines, j, y)
+			cur := d.get(j, y)
 			left++
 			if cur >= base {
 				break
@@ -177,7 +146,7 @@ func runPart2(_ context.Context) error {
 		// Looking right.
 		right := 0
 		for j := x + 1; j < width; j++ {
-			cur := get(d.Lines, j, y)
+			cur := d.get(j, y)
 			right++
 			if cur >= base {
 				break
