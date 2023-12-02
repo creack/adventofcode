@@ -17,8 +17,6 @@ type Game struct {
 }
 
 type Data struct {
-	Lines []string
-
 	Games []Game
 }
 
@@ -33,7 +31,6 @@ func parse(fileName string) (*Data, error) {
 		if line == "" {
 			continue
 		}
-		d.Lines = append(d.Lines, line)
 
 		parts := strings.Split(line, ":")
 		if len(parts) != 2 {
@@ -45,8 +42,9 @@ func parse(fileName string) (*Data, error) {
 			return nil, fmt.Errorf("atoi %q: %w", gameNumberStr, err)
 		}
 
-		g := Game{}
-		g.ID = gameNumber
+		g := Game{
+			ID: gameNumber,
+		}
 
 		sets := strings.Split(parts[1], ";")
 		for _, set := range sets {
@@ -88,18 +86,18 @@ func run(_ context.Context) error {
 		return fmt.Errorf("parse: %w", err)
 	}
 
-	red := 12
-	green := 13
-	blue := 14
+	const red, green, blue = 12, 13, 14
 
-	total := 0
+	totalPart1, totalPart2 := 0, 0
 	for _, g := range d.Games {
 		possible := g.Red <= red && g.Green <= green && g.Blue <= blue
-		fmt.Printf("%d: %d, %d, %d -- %t\n", g.ID, g.Red, g.Green, g.Blue, possible)
-
-		total += g.Red * g.Green * g.Blue
+		if possible {
+			totalPart1 += g.ID
+		}
+		totalPart2 += g.Red * g.Green * g.Blue
 	}
-	fmt.Printf("total: %d\n", total)
+	fmt.Printf("Part 1: %d\n", totalPart1)
+	fmt.Printf("Part 2: %d\n", totalPart2)
 	return nil
 }
 
